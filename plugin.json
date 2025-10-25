@@ -1,0 +1,28 @@
+{
+  "pluginId": "schematic",
+  "pluginBase": "/plugins/schematic",
+  "defaultConfig": {
+  },
+  "requires": {
+    "css": [
+      "css/heed-schematic.css"
+    ]
+  },
+  "asides": {
+    "block-type": {
+      "identifier": "id"
+    }
+  },
+  "provides": {
+    "hooks": {
+      "init": {
+        "src": "SchematicInitHook.js"
+      }
+    },
+    "layoutComponents": {
+      "schematic-block": {
+        "src": "SchematicBlock.js"
+      }
+    }
+  }
+}

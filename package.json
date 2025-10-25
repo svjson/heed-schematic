@@ -1,0 +1,21 @@
+{
+  "name": "heed-schematic",
+  "version": "0.1.0",
+  "license": "MIT",
+  "author": "Sven Johansson",
+  "description": "Plugin for Heed, providing interactive schematic blocks.",
+  "type": "module",
+  "files": [
+    "plugin.json",
+    "SchematicBlock.js",
+    "SchematicInitHook.js",
+    "js/",
+    "css/"
+  ],
+  "dependencies": {
+    "prismjs": "^1.30.0"
+  },
+  "devDependencies": {
+    "prettier":"^3.6.2"
+  }
+}
