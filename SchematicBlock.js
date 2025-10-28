@@ -1,24 +1,39 @@
+import { applyBlockAttributes } from './block-props.js'
+
 class SchematicBlock extends Heed.AbstractContentSection {
   constructor(section, slide) {
     super(section, slide)
   }
 
   renderTo(el) {
+    el.classList.add('heed-schematic-item-container')
+
     const blockDiv = document.createElement('div')
     blockDiv.classList.add('heed-schematic-block')
 
-    const { color, draggable } = this.section
-    if (color) {
-      blockDiv.style.backgroundColor = color
-    }
-    if (draggable === true || draggable === 'true') {
-      blockDiv.classList.add('hs-draggable')
-      blockDiv.setAttribute('draggable', true)
-    }
+    applyBlockAttributes(el, blockDiv, this.section, this.slide)
 
-    blockDiv.innerText = this.section.content ?? ''
+    this.addDragStartListener(blockDiv)
+
     el.appendChild(blockDiv)
-    console.log(this.section)
+  }
+
+  addDragStartListener(blockEl) {
+    blockEl.addEventListener('dragstart', (e) => {
+      e.dataTransfer.setData(
+        'application/x-schematic',
+        JSON.stringify({
+          ...this.section,
+        })
+      )
+      e.dataTransfer.effectAllowed = 'move'
+      setTimeout(() => {
+        blockEl.style.opacity = '0%'
+      }, 50)
+    })
+    blockEl.addEventListener('dragend', (e) => {
+      blockEl.style.opacity = '100%'
+    })
   }
 }
 

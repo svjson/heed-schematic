@@ -11,17 +11,34 @@
   "asides": {
     "block-type": {
       "identifier": "id"
+    },
+    "container-type": {
+      "identifier": "id"
     }
   },
   "provides": {
     "hooks": {
       "init": {
         "src": "SchematicInitHook.js"
+      },
+      "postRender": {
+        "src": "SchematicPostRenderHook.js",
+        "scope": "slide",
+        "components": ["schematic:*"]
       }
     },
     "layoutComponents": {
       "schematic-block": {
         "src": "SchematicBlock.js"
+      },
+      "schematic-component": {
+        "src": "SchematicComponent.js"
+      },
+      "schematic-container": {
+        "src": "SchematicContainer.js"
+      },
+      "schematic-component-library": {
+        "src": "SchematicComponentLibraryContainer.js"
       }
     }
   }

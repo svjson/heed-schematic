@@ -1,9 +1,83 @@
-.heed-schematic-block {
-  border: 2px solid black;
-  display: inline-block;
-  padding: 16px;
+.heed-schematic-container {
   background-color: gray;
-  font-size: 5vmin;
+  border: 2px solid black;
+  position: relative;
+}
+
+.heed-schematic-container-title {
+  margin-bottom: 4px;
+  color: #eee;
+}
+
+.heed-schematic-item-container {
+  display: inline-block;
+  width: auto;
+}
+
+.heed-schematic-shape-box {
+  aspect-ratio: 1 / 1;
+}
+
+.heed-schematic-shape-rectangle {
+  aspect-ratio: 2 / 1;
+}
+
+
+.heed-schematic-size-1 {
+  box-sizing: content-box;
+  width: 5%;
+  height: auto;
+}
+
+.heed-schematic-size-2 {
+  box-sizing: content-box;
+  width: 10%;
+  height: auto;
+}
+
+.heed-schematic-size-3 {
+  box-sizing: content-box;
+  width: 15%;
+  height: auto;
+}
+
+.heed-schematic-size-4 {
+  box-sizing: content-box;
+  width: 20%;
+  height: auto;
+}
+
+.heed-schematic-size-5 {
+  box-sizing: content-box;
+  width: 25%;
+  height: auto;
+}
+
+.heed-schematic-size-6 {
+  box-sizing: content-box;
+  width: 30%;
+  height: auto;
+}
+
+.heed-schematic-size-7 {
+  box-sizing: content-box;
+  width: 35%;
+  height: auto;
+}
+
+.heed-schematic-block,
+.heed-schematic-component {
+  border: 2px solid black;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  color: #eee;
+  background-color: gray;
+  font-size: 1.5vw;
+  box-sizing: border-box;
+  height: 100%;
 }
 
 .hs-draggable {
