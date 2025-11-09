@@ -1,9 +1,25 @@
-import { acceptsDropOfType, getListAttribute } from './block-props.js'
+import {
+  acceptsDropOfType,
+  getAttributes,
+  updateBlockAttributes,
+} from './block-props.js'
+import { addDomObserver } from './Dom.js'
 
 export class SchematicContainer extends Heed.AbstractContentSection {
   constructor(section, slide, options = {}) {
     super(section, slide)
     this.containerType = options.containerType = 'basic-container'
+
+    this.objectGraph = []
+
+    this.model = {
+      id: section.id,
+      schematicType: options?.schematicType ?? 'container',
+      type: section.customType,
+      section,
+      sectionEl: null,
+      el: null,
+    }
 
     const { containerType } = this.section
     this.containerType = this.slide.getCustomType(
@@ -14,23 +30,51 @@ export class SchematicContainer extends Heed.AbstractContentSection {
 
   createContainerDiv() {
     const containerDiv = document.createElement('div')
+    containerDiv.id = this.section.id
+    addDomObserver({
+      el: containerDiv,
+      onChildAdded: this.onChildAdded.bind(this),
+      onChildRemoved: this.onChildRemoved.bind(this),
+    })
+
+    containerDiv.classList.add('heed-schematic-element')
     containerDiv.classList.add('heed-schematic-container')
+
+    const { color } = getAttributes(this.section, this.section)
+    containerDiv.style.setProperty('--elm-bg', color)
     ;(this.section.contents ?? []).forEach((child) => {
       const childEl = Heed.ContentSectionFactory.buildSection({
         section: child,
         slide: this.slide,
       })
-
       containerDiv.appendChild(childEl)
     })
-
-    this.addDropListener(containerDiv)
 
     return containerDiv
   }
 
+  onChildAdded(parent, child) {
+    const sectionDef = child.controller.section
+    const childEl = child.controller.blockEl
+    updateBlockAttributes(parent, childEl, sectionDef, this.slide)
+
+    this.objectGraph.push(child.controller.object)
+  }
+
+  onChildRemoved(parent, child) {
+    console.log('Block removed from container', parent, child)
+  }
+
   renderTo(el) {
     const containerDiv = this.createContainerDiv()
+
+    //    this.addDropListener(containerDiv)
+
+    containerDiv._controller = this
+    el._controller = this
+
+    this.model.sectionEl = el
+    this.model.el = containerDiv
 
     const { title, height } = this.section
 
@@ -45,37 +89,53 @@ export class SchematicContainer extends Heed.AbstractContentSection {
       containerDiv.style.height = '100%'
       el.style.height = height
     }
-
     el.appendChild(containerDiv)
   }
 
   addDropListener(container) {
-    container.addEventListener('drop', (e) => {
+    const onDrop = (e) => {
       e.preventDefault()
 
-      const data = JSON.parse(e.dataTransfer.getData('application/x-schematic'))
+      const data = JSON.parse(
+        e.dataTransfer.getData('application/x-schematic') ||
+          container.getAttribute('data-drag')
+      )
       if (!data) return
+      const { object, drag } = data
+      if (!object || !data) return
 
-      console.log(data)
-      if (!acceptsDropOfType('container', this.containerType, data, this.slide))
+      if (
+        !acceptsDropOfType('container', this.containerType, object, this.slide)
+      ) {
         return
+      }
 
-      // Create a new block element
-      const blockEl = Heed.ContentSectionFactory.buildSection({
-        section: {
-          ...data,
-          type: 'schematic:block',
-        },
-        slide: this.slide,
-      })
+      const rect = container.getBoundingClientRect()
 
-      blockEl.style.position = 'absolute'
-      blockEl.style.left = e.offsetX
-      blockEl.style.top = e.offsetY
+      if (object.type === 'schematic:component') {
+        const blockEl = Heed.ContentSectionFactory.buildSection({
+          section: {
+            ...object,
+            type: 'schematic:block',
+          },
+          slide: this.slide,
+        })
 
-      // append it at the drop position
-      container.appendChild(blockEl)
-    })
+        blockEl.style.position = 'absolute'
+        blockEl.style.left = e.offsetX - drag.handle.x
+        blockEl.style.top = e.offsetY - drag.handle.y
+
+        container.appendChild(blockEl)
+      } else if (object.type === 'schematic:block') {
+        const blockEl = e.srcElement.parentElement
+        blockEl.style.left = e.clientX - rect.x - drag.handle.x
+        blockEl.style.top = e.clientY - rect.y - drag.handle.y
+      }
+    }
+
+    container.addEventListener('dragend', onDrop)
+
+    container.addEventListener('drop', onDrop)
   }
 }
 

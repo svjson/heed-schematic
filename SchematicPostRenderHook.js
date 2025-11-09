@@ -5,19 +5,32 @@ class SchematicPostRenderHook {
     Object.assign(this, Heed.plugins.schematic)
   }
 
-  applyHook() {
-    this.initSchematicDragAndDrop()
+  applyHook(slideEl) {
+    console.log('PostRenderHook')
+    //    this.initSchematicDragAndDrop()
+    slideEl.schematicController.initializeView()
   }
 
   initSchematicDragAndDrop() {
-    // 2. make containers droppable
     document
       .querySelectorAll('.heed-schematic-container')
       .forEach((container) => {
         container.addEventListener('dragover', (e) => {
-          e.preventDefault() // allow drop
+          e.preventDefault()
           e.dataTransfer.dropEffect = 'copy'
         })
+        console.log(container._controller.objectGraph)
+        // container
+        //   .querySelectorAll('.heed-schematic-component')
+        //   .forEach((cmpEl) => {
+        //     console.log(cmpEl.controller)
+        //     updateBlockAttributes(
+        //       container,
+        //       cmpEl,
+        //       cmpEl.controller.section,
+        //       this.slide
+        //     )
+        //   })
       })
   }
 }

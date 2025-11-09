@@ -22,59 +22,95 @@ export const getAttributes = (typeDef, overrides) => {
     size: getAttribute(typeDef, overrides, 'size', 2),
     width: getAttribute(typeDef, overrides, 'width'),
     height: getAttribute(typeDef, overrides, 'height'),
+    left: getAttribute(typeDef, overrides, 'left'),
+    top: getAttribute(typeDef, overrides, 'top'),
   }
 }
 
-export const acceptsDropOfType = (mainType, subType, payload, slide) => {
-  if (!subType) return true
+export const acceptsDropOfType = (slide, targetModel, dropModel) => {
+  if (targetModel?.schematicType === 'component-library') return false
+  const isContainer = targetModel?.schematicType === 'container'
 
-  const cType = slide.getCustomType(
-    { container: 'schematic:container-type', block: 'schematic-block-type' }[
-      mainType
-    ],
-    subType
-  )
+  const targetType = targetModel
+    ? slide.getCustomType(
+        `schematic:${targetModel.schematicType}-type`,
+        targetModel.type
+      )
+    : null
 
-  if (cType) {
-    const accept = getListAttribute(cType, slide, 'drop.accept')
-    if (Array.isArray(accept) && !accept.includes(payload.blockType)) {
-      return false
-    }
+  const dropType = dropModel
+    ? slide.getCustomType(
+        `schematic:${dropModel.schematicType}-type`,
+        dropModel.type
+      )
+    : null
+
+  if (!targetType) return isContainer
+
+  const accept = getListAttribute(targetType, slide, 'drop.accept')
+  if (Array.isArray(accept)) {
+    if (!dropType) return false
+    return accept.includes(dropModel.type)
   }
 
   return true
 }
 
 export const applyBlockAttributes = (sectionEl, blockEl, section, slide) => {
-  const { blockType } = section
+  const { customType } = section
 
-  const typeDef = slide.getCustomType('schematic:block-type', blockType)
+  const typeDef = slide.getCustomType('schematic:block-type', customType)
 
-  const { color, draggable, width, height, size, shape } = getAttributes(
+  const { color, draggable, left, top, shape, size } = getAttributes(
     typeDef,
     section
   )
 
+  if (left) {
+    sectionEl.style.left = left
+  }
+  if (top) {
+    sectionEl.style.top = top
+  }
+
   if (color) {
     blockEl.style.backgroundColor = color
-  }
-  if (width) {
-    blockEl.style.width = width
-  }
-  if (height) {
-    blockEl.style.height = height
+    blockEl.style.setProperty('--elm-bg', color)
   }
   if (shape) {
     sectionEl.classList.add(`heed-schematic-shape-${shape}`)
   }
-  if (size) {
-    sectionEl.classList.add(`heed-schematic-size-${size}`)
-  }
 
   if (draggable !== false && draggable !== 'false') {
     blockEl.classList.add('hs-draggable')
-    blockEl.setAttribute('draggable', true)
+    //blockEl.setAttribute('draggable', true)
   }
 
   blockEl.innerText = section.content ?? ''
+}
+
+export const updateBlockAttributes = (parentEl, blockEl, _, slide) => {
+  const controller = blockEl._controller
+  const section = controller.section
+  const { customType } = section
+
+  const typeDef = slide.getCustomType('schematic:block-type', customType)
+  const { size } = getAttributes(typeDef, section)
+
+  const blockSectionEl = blockEl.parentElement
+
+  if (size) {
+    const parentRect = parentEl.getBoundingClientRect()
+    const sizeAttr = Number.parseInt(size)
+    const pcw = (sizeAttr + 1) * 0.05
+    const pxw = parentRect.width * pcw
+    blockSectionEl.style.width = `${pxw}px`
+
+    const ui = controller.model.ui
+    ui.pcw = pcw
+    ui.w = pxw
+    ui.x = parseFloat(blockSectionEl.style.left)
+    ui.y = parseFloat(blockSectionEl.style.top)
+    ui.pcx = (ui.x + ui.w / 2) / parentRect.width
+  }
 }

@@ -21,6 +21,11 @@
       "init": {
         "src": "SchematicInitHook.js"
       },
+      "preRender": {
+        "src": "SchematicPreRenderHook.js",
+        "scope": "slide",
+        "components": ["schematic:*"]
+      },
       "postRender": {
         "src": "SchematicPostRenderHook.js",
         "scope": "slide",
