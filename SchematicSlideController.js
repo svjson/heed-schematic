@@ -1,4 +1,3 @@
-import { acceptsDropOfType } from './block-props.js'
 import {
   mostSpecificIntersection,
   rectCenter,
@@ -111,7 +110,7 @@ export class SchematicSlideController {
         queueMicrotask(() => {
           this.addBlockLike(blockEl.querySelector('.heed-schematic-element'))
         })
-      } else if (dropTarget.model === this.dragOp.source.model.parent) {
+      } else if (dropTarget.model.controller.isDirectParent(dragHandle.model)) {
         const el = this.dragOp.source.model.sectionEl
 
         el.style.position = 'absolute'
@@ -128,14 +127,13 @@ export class SchematicSlideController {
 
   _findDropTarget(dragHandle) {
     const handleRect = dragHandle.getBoundingClientRect()
-
     const intersecting = []
 
     Object.entries(this.model).forEach(([id, objModel]) => {
       const objRect = objModel.el.getBoundingClientRect()
       if (
         rectsIntersect(handleRect, objRect) &&
-        acceptsDropOfType(this.slide, objModel, dragHandle.model)
+        objModel.controller.acceptsChildType(dragHandle.model)
       ) {
         intersecting.push({
           model: objModel,

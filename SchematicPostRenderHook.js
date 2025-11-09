@@ -19,7 +19,7 @@ class SchematicPostRenderHook {
           e.preventDefault()
           e.dataTransfer.dropEffect = 'copy'
         })
-        console.log(container._controller.objectGraph)
+        //        console.log(container._controller.objectGraph)
         // container
         //   .querySelectorAll('.heed-schematic-component')
         //   .forEach((cmpEl) => {

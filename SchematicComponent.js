@@ -1,40 +1,33 @@
 import { applyBlockAttributes } from './block-props.js'
+import { SchematicElement } from './SchematicElement.js'
 
-class SchematicComponent extends Heed.AbstractContentSection {
+class SchematicComponent extends SchematicElement {
   constructor(section, slide) {
-    super(section, slide)
-    this.model = {
-      id: section.id,
+    super(section, slide, {
       schematicType: 'component',
-      type: section.customType,
-      controller: this,
-      section,
-      ui: {},
-      children: [],
-      sectionEl: null,
-      el: null,
-    }
+      typeClass: 'heed-schematic-component',
+    })
   }
 
-  renderTo(el) {
-    el.classList.add('heed-schematic-item-container')
+  // renderTo(el) {
+  //   el.classList.add('heed-schematic-item-container')
 
-    const blockDiv = document.createElement('div')
-    blockDiv.id = this.model.id
-    blockDiv.classList.add('heed-schematic-element')
-    blockDiv.classList.add('heed-schematic-component')
-    applyBlockAttributes(el, blockDiv, this.section, this.slide)
+  //   const blockDiv = document.createElement('div')
+  //   blockDiv.id = this.model.id
+  //   blockDiv.classList.add('heed-schematic-element')
+  //   blockDiv.classList.add('heed-schematic-component')
+  //   applyBlockAttributes(el, blockDiv, this.section, this.slide)
 
-    //    this.addDragStartListener(blockDiv)
-    this.blockEl = blockDiv
-    this.blockEl.model = this.model
-    this.blockEl._controller = this
-    el.appendChild(blockDiv)
-    el._controller = this
-    el.model = this.model
-    this.model.el = blockDiv
-    this.model.sectionEl = el
-  }
+  //   //    this.addDragStartListener(blockDiv)
+  //   this.blockEl = blockDiv
+  //   this.blockEl.model = this.model
+  //   this.blockEl._controller = this
+  //   el.appendChild(blockDiv)
+  //   el._controller = this
+  //   el.model = this.model
+  //   this.model.el = blockDiv
+  //   this.model.sectionEl = el
+  // }
 
   getDragHandle({ slideEl, x, y, width, height }) {
     const blockEl = Heed.ContentSectionFactory.buildSection({
@@ -57,27 +50,6 @@ class SchematicComponent extends Heed.AbstractContentSection {
 
   returnDragHandle(dragHandle) {
     dragHandle.remove()
-  }
-
-  deprecated_addDragStartListener(blockDiv) {
-    blockDiv.addEventListener('dragstart', (e) => {
-      const rect = blockDiv.getBoundingClientRect()
-      e.dataTransfer.setData(
-        'application/x-schematic',
-        JSON.stringify({
-          drag: {
-            handle: {
-              x: e.clientX - rect.left,
-              y: e.clientY - rect.top,
-            },
-          },
-          model: {
-            ...this.section,
-          },
-        })
-      )
-      e.dataTransfer.effectAllowed = 'copy'
-    })
   }
 }
 

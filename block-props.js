@@ -101,9 +101,10 @@ export const updateBlockAttributes = (parentEl, blockEl, _, slide) => {
 
   if (size) {
     const parentRect = parentEl.getBoundingClientRect()
+    const containerRect = controller.getRootContainerRect() ?? parentRect
     const sizeAttr = Number.parseInt(size)
     const pcw = (sizeAttr + 1) * 0.05
-    const pxw = parentRect.width * pcw
+    const pxw = containerRect.width * pcw
     blockSectionEl.style.width = `${pxw}px`
 
     const ui = controller.model.ui
