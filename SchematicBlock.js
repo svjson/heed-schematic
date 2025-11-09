@@ -9,12 +9,17 @@ class SchematicBlock extends SchematicElement {
   }
 
   getDragHandle({ slideEl, x, y, width, height }) {
-    const handle = this.model.sectionEl.cloneNode(true)
+    const clone = this.clone()
+    const handle = clone.model.sectionEl
     slideEl.appendChild(handle)
     this.model.sectionEl.style.visibility = 'hidden'
 
-    handle._controller = this
-    handle.model = this.model
+    // handle._controller = this
+    // handle.model = {
+    //   ...this.model,
+    //   sectionEl: handle,
+    //   el: handle.querySelector('.heed-schematic-element'),
+    // }
 
     handle.style.position = 'absolute'
     handle.style.left = x

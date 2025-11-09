@@ -24,6 +24,8 @@ export const getAttributes = (typeDef, overrides) => {
     height: getAttribute(typeDef, overrides, 'height'),
     left: getAttribute(typeDef, overrides, 'left'),
     top: getAttribute(typeDef, overrides, 'top'),
+    right: getAttribute(typeDef, overrides, 'right'),
+    bottom: getAttribute(typeDef, overrides, 'bottom'),
   }
 }
 
@@ -61,16 +63,21 @@ export const applyBlockAttributes = (sectionEl, blockEl, section, slide) => {
 
   const typeDef = slide.getCustomType('schematic:block-type', customType)
 
-  const { color, draggable, left, top, shape, size } = getAttributes(
-    typeDef,
-    section
-  )
+  const { color, draggable, left, top, bottom, right, shape, size } =
+    getAttributes(typeDef, section)
 
   if (left) {
     sectionEl.style.left = left
   }
+  if (right) {
+    sectionEl.style.right = right
+  }
+
   if (top) {
     sectionEl.style.top = top
+  }
+  if (bottom) {
+    sectionEl.style.bottom = bottom
   }
 
   if (color) {
@@ -101,7 +108,10 @@ export const updateBlockAttributes = (parentEl, blockEl, _, slide) => {
 
   if (size) {
     const parentRect = parentEl.getBoundingClientRect()
-    const containerRect = controller.getRootContainerRect() ?? parentRect
+    const containerRect =
+      controller.model.dimensionContextRect ??
+      controller.getRootContainerRect() ??
+      parentRect
     const sizeAttr = Number.parseInt(size)
     const pcw = (sizeAttr + 1) * 0.05
     const pxw = containerRect.width * pcw

@@ -82,7 +82,17 @@ export class SchematicSlideController {
       if (conn.from === id || conn.to === id) this._updateConnection(conn)
     })
      */
-    this._findDropTarget(handleEl)
+    const dropTarget = this._findDropTarget(handleEl)
+    const container = dropTarget?.model.controller.getContainer()
+    //dropTarget.model.controller.updateConnections()
+    if (container) {
+      container.updateConnections(
+        handleEl.model.controller.getBlocks().reduce((result, blk) => {
+          result[blk.id] = blk
+          return result
+        }, {})
+      )
+    }
   }
 
   _endDrag = (e) => {
@@ -109,11 +119,14 @@ export class SchematicSlideController {
 
         queueMicrotask(() => {
           this.addBlockLike(blockEl.querySelector('.heed-schematic-element'))
+          this.updateConnections(blockEl.model)
         })
       } else if (dropTarget.model.controller.isDirectParent(dragHandle.model)) {
         const el = this.dragOp.source.model.sectionEl
 
         el.style.position = 'absolute'
+        el.style.right = null
+        el.style.bottom = null
         el.style.left = `${dropTarget.position.x}px`
         el.style.top = `${dropTarget.position.y}px`
       }
@@ -123,6 +136,19 @@ export class SchematicSlideController {
     window.removeEventListener('mouseup', this._endDrag)
     this.dragOp.source.returnDragHandle(dragHandle)
     this.dragOp = null
+
+    Object.entries(this.model).forEach(([id, model]) => {
+      if (model.schematicType === 'container') {
+        model.controller.updateConnections()
+      }
+    })
+  }
+
+  updateConnections(model) {
+    const container = model.controller.getContainer()
+    if (container) {
+      container.updateConnections()
+    }
   }
 
   _findDropTarget(dragHandle) {

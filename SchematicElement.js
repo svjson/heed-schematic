@@ -3,6 +3,7 @@ import {
   applyBlockAttributes,
   updateBlockAttributes,
 } from './block-props.js'
+import { parseConnectionTypes } from './Connection.js'
 import { addDomObserver } from './Dom.js'
 
 export class SchematicElement extends Heed.AbstractContentSection {
@@ -21,6 +22,11 @@ export class SchematicElement extends Heed.AbstractContentSection {
       el: null,
     }
     this.typeClass = typeOpts.typeClass
+    this.customType = slide.getCustomType(
+      `schematic:${this.model.schematicType}-type`,
+      this.model.type
+    )
+    this.model.connectionTypes = parseConnectionTypes(this)
   }
 
   acceptsChildType(childModel) {
@@ -32,6 +38,21 @@ export class SchematicElement extends Heed.AbstractContentSection {
 
   isDirectParent(childModel) {
     return this.model.children.some((child) => child.id === childModel.id)
+  }
+
+  getBlocks() {
+    const result = []
+    if (this.model.schematicType === 'block') {
+      result.push(this.model)
+    }
+    return this.model.children.reduce((children, child) => {
+      return [...children, ...child.controller.getBlocks()]
+    }, result)
+  }
+
+  getContainer() {
+    if (this.model.parent) return this.model.parent.getContainer()
+    return this
   }
 
   getRootContainerRect() {
@@ -69,6 +90,7 @@ export class SchematicElement extends Heed.AbstractContentSection {
     this.model.children.push(child.model)
     updateBlockAttributes(parent, childEl, sectionDef, this.slide)
   }
+
   _onChildRemoved(parent, child) {
     console.log('Block removed from parent', parent, child)
   }
@@ -79,5 +101,29 @@ export class SchematicElement extends Heed.AbstractContentSection {
     applyBlockAttributes(el, elementEl, this.section, this.slide)
     this._bindReferences(el, elementEl)
     el.appendChild(elementEl)
+  }
+
+  clone() {
+    const blockEl = Heed.ContentSectionFactory.buildSection({
+      section: {
+        ...this.section,
+        type: this.model.section.type,
+      },
+      slide: this.slide,
+    })
+
+    blockEl.model.dimensionContextRect = this.getRootContainerRect()
+    blockEl.model.sectionEl = blockEl
+    blockEl.model.el = blockEl.querySelector('.heed-schematic-element')
+
+    for (const child of this.model.children) {
+      const childCtrl = child.controller.clone()
+      blockEl.model.el.appendChild(childCtrl.model.sectionEl)
+      childCtrl.model.sectionEl.style.width = child.sectionEl.style.width
+      childCtrl.model.sectionEl.style.top = child.sectionEl.style.top
+      childCtrl.model.sectionEl.style.left = child.sectionEl.style.left
+    }
+
+    return blockEl._controller
   }
 }
