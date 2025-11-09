@@ -30,7 +30,6 @@ export const getAttributes = (typeDef, overrides) => {
 }
 
 export const acceptsDropOfType = (slide, targetModel, dropModel) => {
-  if (targetModel?.schematicType === 'component-library') return false
   const isContainer = targetModel?.schematicType === 'container'
 
   const targetType = targetModel

@@ -7,7 +7,9 @@ class SchematicComponentLibraryContainer extends SchematicContainer {
     })
   }
 
-  addDropListener() {}
+  acceptsChildType() {
+    return false
+  }
 }
 
 Heed.ContentSectionRegistry.register(
