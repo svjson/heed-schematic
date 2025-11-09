@@ -101,7 +101,20 @@ export class SchematicSlideController {
     const dropTarget = this._findDropTarget(dragHandle)
 
     if (dropTarget) {
+      const slot = Array.isArray(dropTarget.slot)
+        ? dropTarget.slot.at(-1)
+        : null
+
+      const attachLeft = `${slot?.x ?? dropTarget.position.x}px`
+      const attachTop = `${slot?.y ?? dropTarget.position.y}px`
+
       if (dragHandle.model.transient) {
+        if (Array.isArray(dropTarget.slot)) {
+          dropTarget.model.children.forEach((child, i) => {
+            child.sectionEl.style.left = `${dropTarget.slot[i].x}px`
+          })
+        }
+
         const blockEl = Heed.ContentSectionFactory.buildSection({
           section: {
             ...dragHandle.model.section,
@@ -111,8 +124,8 @@ export class SchematicSlideController {
           slide: this.slide,
         })
         blockEl.style.position = 'absolute'
-        blockEl.style.left = `${dropTarget.position.x}px`
-        blockEl.style.top = `${dropTarget.position.y}px`
+        blockEl.style.left = attachLeft
+        blockEl.style.top = attachTop
 
         dropTarget.model.el.appendChild(blockEl)
         blockEl.model.parent = dropTarget.model
@@ -124,11 +137,13 @@ export class SchematicSlideController {
       } else if (dropTarget.model.controller.isDirectParent(dragHandle.model)) {
         const el = this.dragOp.source.model.sectionEl
 
-        el.style.position = 'absolute'
-        el.style.right = null
-        el.style.bottom = null
-        el.style.left = `${dropTarget.position.x}px`
-        el.style.top = `${dropTarget.position.y}px`
+        if (!dropTarget.slot) {
+          el.style.position = 'absolute'
+          el.style.right = null
+          el.style.bottom = null
+          el.style.left = attachLeft
+          el.style.top = attachTop
+        }
       }
     }
 
@@ -187,6 +202,7 @@ export class SchematicSlideController {
     if (target) {
       return {
         model: target.model,
+        slot: target.model.controller.getSlotFor(dragHandle.model),
         position: {
           x: handleRect.left - target.rect.left,
           y: handleRect.top - target.rect.top,

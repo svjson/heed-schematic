@@ -1,10 +1,11 @@
 import {
   acceptsDropOfType,
   applyBlockAttributes,
+  getAttribute,
   updateBlockAttributes,
 } from './block-props.js'
 import { parseConnectionTypes } from './Connection.js'
-import { addDomObserver } from './Dom.js'
+import { addDomObserver, rectCenter } from './Dom.js'
 
 export class SchematicElement extends Heed.AbstractContentSection {
   constructor(section, slide, typeOpts) {
@@ -34,6 +35,63 @@ export class SchematicElement extends Heed.AbstractContentSection {
       this.isDirectParent(childModel) ||
       acceptsDropOfType(this.slide, this.model, childModel)
     )
+  }
+
+  getSlotFor(childModel) {
+    const slotDef = getAttribute(
+      this.customType,
+      this.model.section,
+      `slots.${childModel.type}`
+    )
+
+    if (!slotDef) return null
+
+    const slotParts = slotDef.split(',').map((p) => p.trim())
+
+    const parentRect = this.model.el.getBoundingClientRect()
+    const childRect = childModel.el.getBoundingClientRect()
+
+    if (slotParts[0] === 'center') {
+      console.log('center')
+      return [
+        {
+          x: parentRect.width / 2 - childRect.width / 2,
+          y: parentRect.height / 2 - childRect.height / 2,
+          w: childRect.width,
+          h: childRect.height,
+        },
+      ]
+    } else if (slotParts[0] === 'uniform-bottom') {
+      const [_, offsetY, gap] = slotParts
+      const gapSize = parentRect.width * parseFloat(gap)
+      const rowWidth =
+        this.model.children.reduce((w, child) => {
+          return w + child.sectionEl.getBoundingClientRect().width
+        }, childRect.width) +
+        this.model.children.length * gapSize
+
+      console.log(parentRect.width, rowWidth)
+      const rowStart = parentRect.width / 2 - rowWidth / 2
+      const rowY = parentRect.height + parseFloat(offsetY) * parentRect.height
+      console.log(rowStart)
+
+      return [
+        ...this.model.children.map((_, i) => ({
+          x: rowStart + (childRect.width + gapSize) * i,
+          y: rowY,
+          w: childRect.width,
+          h: childRect.height,
+        })),
+        {
+          x:
+            rowStart + (childRect.width + gapSize) * this.model.children.length,
+          y: rowY,
+          w: childRect.width,
+          h: childRect.height,
+        },
+      ]
+    }
+    return null
   }
 
   isDirectParent(childModel) {
@@ -115,6 +173,13 @@ export class SchematicElement extends Heed.AbstractContentSection {
     blockEl.model.dimensionContextRect = this.getRootContainerRect()
     blockEl.model.sectionEl = blockEl
     blockEl.model.el = blockEl.querySelector('.heed-schematic-element')
+
+    updateBlockAttributes(
+      blockEl,
+      blockEl.model.el,
+      blockEl.model.controller.section,
+      this.slide
+    )
 
     for (const child of this.model.children) {
       const childCtrl = child.controller.clone()

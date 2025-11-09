@@ -14,13 +14,6 @@ class SchematicBlock extends SchematicElement {
     slideEl.appendChild(handle)
     this.model.sectionEl.style.visibility = 'hidden'
 
-    // handle._controller = this
-    // handle.model = {
-    //   ...this.model,
-    //   sectionEl: handle,
-    //   el: handle.querySelector('.heed-schematic-element'),
-    // }
-
     handle.style.position = 'absolute'
     handle.style.left = x
     handle.style.top = y

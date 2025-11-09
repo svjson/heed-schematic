@@ -26,6 +26,9 @@ export const getAttributes = (typeDef, overrides) => {
     top: getAttribute(typeDef, overrides, 'top'),
     right: getAttribute(typeDef, overrides, 'right'),
     bottom: getAttribute(typeDef, overrides, 'bottom'),
+    title: getAttribute(typeDef, overrides, 'title'),
+    titleOffset: getAttribute(typeDef, overrides, 'title.offset'),
+    titleRotation: getAttribute(typeDef, overrides, 'title.rotation'),
   }
 }
 
@@ -62,8 +65,17 @@ export const applyBlockAttributes = (sectionEl, blockEl, section, slide) => {
 
   const typeDef = slide.getCustomType('schematic:block-type', customType)
 
-  const { color, draggable, left, top, bottom, right, shape, size } =
-    getAttributes(typeDef, section)
+  const {
+    color,
+    draggable,
+    left,
+    top,
+    bottom,
+    right,
+    shape,
+    title,
+    titleOffset,
+  } = getAttributes(typeDef, section)
 
   if (left) {
     sectionEl.style.left = left
@@ -93,6 +105,13 @@ export const applyBlockAttributes = (sectionEl, blockEl, section, slide) => {
   }
 
   blockEl.innerText = section.content ?? ''
+
+  if (title) {
+    const titleEl = document.createElement('div')
+    titleEl.classList.add('heed-schematic-title')
+    titleEl.innerText = title
+    blockEl.appendChild(titleEl)
+  }
 }
 
 export const updateBlockAttributes = (parentEl, blockEl, _, slide) => {
@@ -101,10 +120,9 @@ export const updateBlockAttributes = (parentEl, blockEl, _, slide) => {
   const { customType } = section
 
   const typeDef = slide.getCustomType('schematic:block-type', customType)
-  const { size } = getAttributes(typeDef, section)
+  const { size, titleOffset, titleRotation } = getAttributes(typeDef, section)
 
   const blockSectionEl = blockEl.parentElement
-
   if (size) {
     const parentRect = parentEl.getBoundingClientRect()
     const containerRect =
@@ -122,5 +140,18 @@ export const updateBlockAttributes = (parentEl, blockEl, _, slide) => {
     ui.x = parseFloat(blockSectionEl.style.left)
     ui.y = parseFloat(blockSectionEl.style.top)
     ui.pcx = (ui.x + ui.w / 2) / parentRect.width
+
+    const titleEl = blockEl.querySelector('.heed-schematic-title')
+    if (titleEl) {
+      titleEl.style.transform = ''
+
+      if (titleOffset) {
+        const [x, y] = titleOffset.split(',')
+        titleEl.style.transform += `translate(${parseFloat(x) * pxw}px, ${parseFloat(y) * (pxw / 2)}px)`
+      }
+      if (titleRotation) {
+        titleEl.style.transform += ` rotate(${titleRotation}deg)`
+      }
+    }
   }
 }
