@@ -32,12 +32,16 @@ export class SchematicContainer extends SchematicElement {
       `0 0 ${containerRect.width} ${containerRect.height}`
     )
 
+    const refreshed = []
+
     blocks
       .reduce((result, block) => {
         return [...result, ...findConnections(block, blocks)]
       }, [])
       .forEach((conn) => {
         const connId = `conn--${conn.from.id}--to--${conn.to.id}`
+        refreshed.push(connId)
+
         let line = this.connSvg.querySelector(`#${connId}`)
 
         if (!line) {
@@ -49,6 +53,7 @@ export class SchematicContainer extends SchematicElement {
         const fromRect = conn.from.el.getBoundingClientRect()
         const toRect = conn.to.el.getBoundingClientRect()
 
+        line.classList.add('heed-schematic-connection')
         line.setAttribute(
           'x1',
           fromRect.left + fromRect.width / 2 - containerRect.left
@@ -62,6 +67,15 @@ export class SchematicContainer extends SchematicElement {
         line.setAttribute('stroke', 'black')
         line.setAttribute('stroke-width', 3)
         line.setAttribute('marker-end', 'url(#arrowhead)')
+      })
+
+    this.connSvg
+      .querySelectorAll('.heed-schematic-connection')
+      .forEach((line) => {
+        if (!refreshed.includes(line.id)) {
+          console.log(`No ${line.id} in ${refreshed}`)
+          line.remove()
+        }
       })
   }
 
@@ -114,16 +128,16 @@ export class SchematicContainer extends SchematicElement {
 
     const marker = document.createElementNS(SVG_NS, 'marker')
     marker.setAttribute('id', 'arrowhead')
-    marker.setAttribute('markerWidth', '10')
+    marker.setAttribute('markerWidth', '8')
     marker.setAttribute('markerHeight', '7')
-    marker.setAttribute('refX', '10')
+    marker.setAttribute('refX', '8')
     marker.setAttribute('refY', '3.5')
     marker.setAttribute('orient', 'auto')
 
     defs.appendChild(marker)
 
     const polygon = document.createElementNS(SVG_NS, 'polygon')
-    polygon.setAttribute('points', '0 0, 10 3.5, 0 7')
+    polygon.setAttribute('points', '0 0, 8 3.5, 0 7')
     polygon.setAttribute('fill', 'black')
     marker.appendChild(polygon)
 

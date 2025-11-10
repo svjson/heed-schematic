@@ -1,7 +1,5 @@
 import {
   mostSpecificIntersection,
-  rectCenter,
-  rectOffset,
   rectOffsetPc,
   rectsIntersect,
 } from './Dom.js'
