@@ -7,6 +7,9 @@ import {
 import { parseConnectionTypes } from './Connection.js'
 import { addDomObserver, rectCenter } from './Dom.js'
 
+/**
+ * Abstract base class for all schematic elements
+ */
 export class SchematicElement extends Heed.AbstractContentSection {
   constructor(section, slide, typeOpts) {
     super(section, slide)
@@ -30,6 +33,21 @@ export class SchematicElement extends Heed.AbstractContentSection {
     this.model.connectionTypes = parseConnectionTypes(this)
   }
 
+  /**
+   * Default query method for provided action when dropping another
+   * schematic element onto this element.
+   */
+  acceptAction(childModel) {
+    if (this.acceptsChildType(childModel)) {
+      return {
+        action: 'attach',
+      }
+    }
+  }
+
+  /**
+   * Query if this SchematicElement accepts drops of the childModel type.
+   */
   acceptsChildType(childModel) {
     return (
       this.isDirectParent(childModel) ||
@@ -37,6 +55,10 @@ export class SchematicElement extends Heed.AbstractContentSection {
     )
   }
 
+  /**
+   * Get the slot in which the `childModel` element should be attached,
+   * if any
+   */
   getSlotFor(childModel) {
     const slotDef = getAttribute(
       this.customType,
@@ -52,11 +74,21 @@ export class SchematicElement extends Heed.AbstractContentSection {
     const childRect = childModel.el.getBoundingClientRect()
 
     if (slotParts[0] === 'center') {
-      console.log('center')
       return [
         {
+          id: childModel.id,
           x: parentRect.width / 2 - childRect.width / 2,
           y: parentRect.height / 2 - childRect.height / 2,
+          w: childRect.width,
+          h: childRect.height,
+        },
+      ]
+    } else if (slotParts[0] === 'top-left') {
+      return [
+        {
+          id: childModel.id,
+          x: -childRect.width / 2,
+          y: -childRect.height / 2,
           w: childRect.width,
           h: childRect.height,
         },
@@ -70,19 +102,19 @@ export class SchematicElement extends Heed.AbstractContentSection {
         }, childRect.width) +
         this.model.children.length * gapSize
 
-      console.log(parentRect.width, rowWidth)
       const rowStart = parentRect.width / 2 - rowWidth / 2
       const rowY = parentRect.height + parseFloat(offsetY) * parentRect.height
-      console.log(rowStart)
 
       return [
-        ...this.model.children.map((_, i) => ({
+        ...this.model.children.map((prevChild, i) => ({
+          id: prevChild.id,
           x: rowStart + (childRect.width + gapSize) * i,
           y: rowY,
           w: childRect.width,
           h: childRect.height,
         })),
         {
+          id: childModel.id,
           x:
             rowStart + (childRect.width + gapSize) * this.model.children.length,
           y: rowY,
@@ -149,16 +181,31 @@ export class SchematicElement extends Heed.AbstractContentSection {
     updateBlockAttributes(parent, childEl, sectionDef, this.slide)
   }
 
-  _onChildRemoved(parent, child) {
-    console.log('Block removed from parent', parent, child)
+  _onChildRemoved(_parent, child) {
+    this.model.children = this.model.children.filter(
+      (c) => c.id !== child.model.id
+    )
   }
 
+  // override
   renderTo(el) {
     el.classList.add('heed-schematic-item-container')
     const elementEl = this._createElement()
     applyBlockAttributes(el, elementEl, this.section, this.slide)
     this._bindReferences(el, elementEl)
+    ;(this.section.contents ?? []).forEach((child) => {
+      const childEl = Heed.ContentSectionFactory.buildSection({
+        section: child,
+        slide: this.slide,
+      })
+      elementEl.appendChild(childEl)
+    })
+
     el.appendChild(elementEl)
+  }
+
+  dispose() {
+    this.model.sectionEl.remove()
   }
 
   clone() {

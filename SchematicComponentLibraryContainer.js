@@ -1,5 +1,11 @@
 import { SchematicContainer } from './SchematicContainer.js'
 
+/**
+ * "Component Library" container block.
+ *
+ * Contains schematic components that can be dragged and dropped onto
+ * other containers/surfaces to be "instantiated" as schematic blocks.
+ */
 class SchematicComponentLibraryContainer extends SchematicContainer {
   constructor(section, slide) {
     super(section, slide, {
@@ -7,6 +13,16 @@ class SchematicComponentLibraryContainer extends SchematicContainer {
     })
   }
 
+  // override
+  acceptAction(childModel) {
+    if (childModel.schematicType === 'block') {
+      return {
+        action: 'dispose',
+      }
+    }
+  }
+
+  // override
   acceptsChildType() {
     return false
   }

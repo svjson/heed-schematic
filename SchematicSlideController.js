@@ -69,20 +69,18 @@ export class SchematicSlideController {
 
   _onDrag = (e) => {
     if (!this.dragOp) return
-    const { startX, startY, origX, origY } = this.dragOp
-    const dx = e.clientX - startX,
-      dy = e.clientY - startY
-    const model = this.dragOp.model
+    const { startX, startY } = this.dragOp
+    const dx = e.clientX - startX
+    const dy = e.clientY - startY
+
     const handleEl = this.dragOp.dragHandle
     handleEl.style.transform = `translate(${dx}px, ${dy}px)`
-    /*
-    this.connections.forEach((conn) => {
-      if (conn.from === id || conn.to === id) this._updateConnection(conn)
-    })
-     */
+
     const dropTarget = this._findDropTarget(handleEl)
-    const container = dropTarget?.model.controller.getContainer()
-    //dropTarget.model.controller.updateConnections()
+    const container =
+      dropTarget?.model.controller.getContainer() ||
+      this.dragOp.source.getContainer()
+
     if (container) {
       container.updateConnections(
         handleEl.model.controller.getBlocks().reduce((result, blk) => {
@@ -93,54 +91,63 @@ export class SchematicSlideController {
     }
   }
 
-  _endDrag = (e) => {
+  _endDrag = () => {
     if (!this.dragOp) return
     const dragHandle = this.dragOp.dragHandle
     const dropTarget = this._findDropTarget(dragHandle)
 
     if (dropTarget) {
-      const slot = Array.isArray(dropTarget.slot)
-        ? dropTarget.slot.at(-1)
-        : null
+      if (dropTarget.action === 'dispose') {
+        this.dragOp.source.dispose()
+      } else if (dropTarget.action === 'attach') {
+        const slot = Array.isArray(dropTarget.slot)
+          ? dropTarget.slot.at(-1)
+          : null
 
-      const attachLeft = `${slot?.x ?? dropTarget.position.x}px`
-      const attachTop = `${slot?.y ?? dropTarget.position.y}px`
+        const attachLeft = `${slot?.x ?? dropTarget.position.x}px`
+        const attachTop = `${slot?.y ?? dropTarget.position.y}px`
 
-      if (dragHandle.model.transient) {
-        if (Array.isArray(dropTarget.slot)) {
-          dropTarget.model.children.forEach((child, i) => {
-            child.sectionEl.style.left = `${dropTarget.slot[i].x}px`
+        if (dragHandle.model.transient) {
+          if (Array.isArray(dropTarget.slot)) {
+            dropTarget.slot.forEach((slot) => {
+              const child = dropTarget.model.children.find(
+                (c) => c.id === slot.id
+              )
+              if (child) child.sectionEl.style.left = `${slot.x}px`
+            })
+          }
+
+          const blockEl = Heed.ContentSectionFactory.buildSection({
+            section: {
+              ...dragHandle.model.section,
+              id: `${dragHandle.model.section.id}-${++this.idSeq}`,
+              type: 'schematic:block',
+            },
+            slide: this.slide,
           })
-        }
+          blockEl.style.position = 'absolute'
+          blockEl.style.left = attachLeft
+          blockEl.style.top = attachTop
 
-        const blockEl = Heed.ContentSectionFactory.buildSection({
-          section: {
-            ...dragHandle.model.section,
-            id: `${dragHandle.model.section.id}-${++this.idSeq}`,
-            type: 'schematic:block',
-          },
-          slide: this.slide,
-        })
-        blockEl.style.position = 'absolute'
-        blockEl.style.left = attachLeft
-        blockEl.style.top = attachTop
+          dropTarget.model.el.appendChild(blockEl)
+          blockEl.model.parent = dropTarget.model
 
-        dropTarget.model.el.appendChild(blockEl)
-        blockEl.model.parent = dropTarget.model
+          queueMicrotask(() => {
+            this.addBlockLike(blockEl.querySelector('.heed-schematic-element'))
+            this.updateConnections(blockEl.model)
+          })
+        } else if (
+          dropTarget.model.controller.isDirectParent(dragHandle.model)
+        ) {
+          const el = this.dragOp.source.model.sectionEl
 
-        queueMicrotask(() => {
-          this.addBlockLike(blockEl.querySelector('.heed-schematic-element'))
-          this.updateConnections(blockEl.model)
-        })
-      } else if (dropTarget.model.controller.isDirectParent(dragHandle.model)) {
-        const el = this.dragOp.source.model.sectionEl
-
-        if (!dropTarget.slot) {
-          el.style.position = 'absolute'
-          el.style.right = null
-          el.style.bottom = null
-          el.style.left = attachLeft
-          el.style.top = attachTop
+          if (!dropTarget.slot) {
+            el.style.position = 'absolute'
+            el.style.right = null
+            el.style.bottom = null
+            el.style.left = attachLeft
+            el.style.top = attachTop
+          }
         }
       }
     }
@@ -172,7 +179,7 @@ export class SchematicSlideController {
       const objRect = objModel.el.getBoundingClientRect()
       if (
         rectsIntersect(handleRect, objRect) &&
-        objModel.controller.acceptsChildType(dragHandle.model)
+        objModel.controller.acceptAction(dragHandle.model)
       ) {
         intersecting.push({
           model: objModel,
@@ -185,8 +192,8 @@ export class SchematicSlideController {
     if (target) {
       const { x, y } = rectOffsetPc(target.rect, handleRect)
       target.model.el.classList.add('heed-schematic-current-drop-target')
-      target.model.el.style.setProperty('--x', `${x}%`)
-      target.model.el.style.setProperty('--y', `${y}%`)
+      //      target.model.el.style.setProperty('--x', `${x}%`)
+      //target.model.el.style.setProperty('--y', `${y}%`)
     }
 
     Object.entries(this.model).forEach(([id, objModel]) => {
@@ -199,6 +206,7 @@ export class SchematicSlideController {
 
     if (target) {
       return {
+        ...target.model.controller.acceptAction(dragHandle.model),
         model: target.model,
         slot: target.model.controller.getSlotFor(dragHandle.model),
         position: {

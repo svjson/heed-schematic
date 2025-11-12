@@ -1,6 +1,9 @@
-import { applyBlockAttributes } from './block-props.js'
 import { SchematicElement } from './SchematicElement.js'
 
+/**
+ * Schematic Component block. Virtually identical to a Schematic Block,
+ * apart from being a "blueprint".
+ */
 class SchematicComponent extends SchematicElement {
   constructor(section, slide) {
     super(section, slide, {
@@ -8,26 +11,6 @@ class SchematicComponent extends SchematicElement {
       typeClass: 'heed-schematic-component',
     })
   }
-
-  // renderTo(el) {
-  //   el.classList.add('heed-schematic-item-container')
-
-  //   const blockDiv = document.createElement('div')
-  //   blockDiv.id = this.model.id
-  //   blockDiv.classList.add('heed-schematic-element')
-  //   blockDiv.classList.add('heed-schematic-component')
-  //   applyBlockAttributes(el, blockDiv, this.section, this.slide)
-
-  //   //    this.addDragStartListener(blockDiv)
-  //   this.blockEl = blockDiv
-  //   this.blockEl.model = this.model
-  //   this.blockEl._controller = this
-  //   el.appendChild(blockDiv)
-  //   el._controller = this
-  //   el.model = this.model
-  //   this.model.el = blockDiv
-  //   this.model.sectionEl = el
-  // }
 
   getDragHandle({ slideEl, x, y, width, height }) {
     const blockEl = Heed.ContentSectionFactory.buildSection({

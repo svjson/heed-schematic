@@ -1,5 +1,8 @@
 import { SchematicElement } from './SchematicElement.js'
 
+/**
+ * Schematic Block - the actual schematic building blocks
+ */
 class SchematicBlock extends SchematicElement {
   constructor(section, slide) {
     super(section, slide, {
