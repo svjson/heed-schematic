@@ -15,7 +15,7 @@ class SchematicComponentLibraryContainer extends SchematicContainer {
 
   // override
   acceptAction(childModel) {
-    if (childModel.schematicType === 'block') {
+    if (childModel.schematicType === 'block' && !childModel.transient) {
       return {
         action: 'dispose',
       }

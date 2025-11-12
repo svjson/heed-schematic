@@ -82,10 +82,10 @@
 
 .heed-schematic-current-drop-target {
   border-color: color-mix(in srgb, #111, white, 100%);
-  background: radial-gradient(circle at var(--x) var(--y),
+/*  background: radial-gradient(circle at var(--x) var(--y),
     color-mix(in srgb, var(--elm-bg), white 20%) 20%,
     color-mix(in srgb, var(--elm-bg), black 40%) 80%),
-              var(--elm-bg);
+              var(--elm-bg); */
   background-size: 100%;
 }
 

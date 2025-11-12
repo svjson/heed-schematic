@@ -162,6 +162,7 @@ export class SchematicSlideController {
         if (model.schematicType === 'container') {
           model.controller.updateConnections()
         }
+        model.el.classList.remove('heed-schematic-current-drop-target')
       })
     })
   }
