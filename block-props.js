@@ -77,7 +77,10 @@ export const applyBlockAttributes = (sectionEl, blockEl, section, slide) => {
     titleOffset,
   } = getAttributes(typeDef, section)
 
-  if (left) {
+  if (left === 'center') {
+    sectionEl.style.left = '50%'
+    sectionEl.setAttribute('data-left', 'center')
+  } else if (left) {
     sectionEl.style.left = left
   }
   if (right) {
@@ -101,7 +104,6 @@ export const applyBlockAttributes = (sectionEl, blockEl, section, slide) => {
 
   if (draggable !== false && draggable !== 'false') {
     blockEl.classList.add('hs-draggable')
-    //blockEl.setAttribute('draggable', true)
   }
 
   blockEl.innerText = section.content ?? ''
@@ -152,6 +154,13 @@ export const updateBlockAttributes = (parentEl, blockEl, _, slide) => {
       if (titleRotation) {
         titleEl.style.transform += ` rotate(${titleRotation}deg)`
       }
+    }
+
+    const dataLeft = blockSectionEl.getAttribute('data-left')
+    const blockRect = blockSectionEl.getBoundingClientRect()
+    if (dataLeft === 'center') {
+      blockSectionEl.style.left = `${parentRect.width / 2 - blockRect.width / 2}px`
+      blockSectionEl.removeAttribute('data-left')
     }
   }
 }
