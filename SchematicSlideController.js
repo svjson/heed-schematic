@@ -157,10 +157,12 @@ export class SchematicSlideController {
     this.dragOp.source.returnDragHandle(dragHandle)
     this.dragOp = null
 
-    Object.entries(this.model).forEach(([id, model]) => {
-      if (model.schematicType === 'container') {
-        model.controller.updateConnections()
-      }
+    queueMicrotask(() => {
+      Object.entries(this.model).forEach(([id, model]) => {
+        if (model.schematicType === 'container') {
+          model.controller.updateConnections()
+        }
+      })
     })
   }
 
